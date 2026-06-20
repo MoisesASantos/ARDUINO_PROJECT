@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portão Automático — Acesso</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0f1e;
+    --bg2: #111827;
+    --bg3: #1a2236;
+    --border: rgba(99,179,237,0.15);
+    --border2: rgba(99,179,237,0.3);
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.18);
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --success: #10b981;
+    --success-bg: rgba(16,185,129,0.1);
+    --danger: #ef4444;
+    --danger-bg: rgba(239,68,68,0.1);
+    --warn: #f59e0b;
+    --warn-bg: rgba(245,158,11,0.1);
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 30px rgba(59,130,246,0.3);
+  }
+
+  .logo h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .logo p {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .form-group { margin-bottom: 1.2rem; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  input::placeholder { color: var(--text3); }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+  }
+
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
+
+  .alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .alert.success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+  .alert.danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+  .alert.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); }
+
+  .gate-status {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .gate-animation {
+    position: relative;
+    width: 120px;
+    height: 100px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .gate-frame {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 90px;
+    border: 3px solid var(--border2);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .gate-door {
+    position: absolute;
+    bottom: 3px;
+    left: 3px;
+    width: calc(50% - 4px);
+    height: 84px;
+    background: linear-gradient(180deg, var(--accent) 0%, rgba(59,130,246,0.3) 100%);
+    border-radius: 0 0 0 5px;
+    transform-origin: left center;
+    transition: transform 1s ease;
+  }
+
+  .gate-door.right {
+    left: calc(50% + 1px);
+    transform-origin: right center;
+    border-radius: 0 0 5px 0;
+  }
+
+  .gate-door.open { transform: perspective(200px) rotateY(-80deg); }
+  .gate-door.right.open { transform: perspective(200px) rotateY(80deg); }
+
+  .gate-status h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .gate-status p {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 1.5rem;
+  }
+
+  .countdown {
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .countdown-label { font-size: 12px; color: var(--text3); margin-bottom: 1.5rem; }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #8b5cf6);
+    transition: width 1s linear;
+    border-radius: 2px;
+  }
+
+  .admin-btn {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .admin-btn a {
+    font-size: 12px;
+    color: var(--text3);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .admin-btn a:hover { color: var(--accent2); }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text3);
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .dot.offline { background: var(--danger); }
+  .dot.checking { background: var(--warn); animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
+    border: 1px solid var(--border);
+  }
+
+  .user-badge .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+
+  .user-badge .info { flex: 1; }
+  .user-badge .name { font-size: 14px; font-weight: 600; }
+  .user-badge .bilhete { font-size: 12px; color: var(--text3); }
+
+  .history-list { margin-top: 1rem; }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .htime { color: var(--text3); font-size: 11px; min-width: 70px; }
+  .history-item .hstatus {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .hstatus.ok { background: var(--success-bg); color: var(--success); }
+  .hstatus.fail { background: var(--danger-bg); color: var(--danger); }
+
+  .sep {
+    height: 1px;
+    background: var(--border);
+    margin: 1.2rem 0;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 30, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-overlay.active {
+    display: flex;
+  }
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .loading-text {
+    color: var(--text2);
+    margin-top: 1rem;
+    font-size: 14px;
+  }
+
+  .loading-content {
+    text-align: center;
+  }
+
+  .admin-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
+    border: 1px solid var(--accent-glow);
+  }
+
+  .admin-badge .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+
+  .admin-badge .info { flex: 1; }
+  .admin-badge .name { font-size: 14px; font-weight: 600; }
+  .admin-badge .username { font-size: 12px; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">A carregar...</div>
+  </div>
+</div>
+
+<div class="logo">
+  <div class="logo-icon">🔐</div>
+  <h1>PortãoSmart</h1>
+  <p>Sistema de Controlo de Acesso</p>
+</div>
+
+<div class="card">
+
+  <!-- VIEW: LOGIN -->
+  <div class="view active" id="view-login">
+
+    <div id="alert-login" class="alert"></div>
+
+    <div class="form-group">
+      <label>Número do Bilhete</label>
+      <input type="text" id="input-bilhete" placeholder="Ex: ANG-2024-001" maxlength="20" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="input-senha" placeholder="••••••" maxlength="20">
+    </div>
+
+    <button class="btn btn-primary" onclick="doLogin()">
+      <span id="btn-text">Abrir Portão</span>
+      <div class="spinner" id="spinner-login"></div>
+      <span id="btn-icon">🚪</span>
+    </button>
+
+    <div class="admin-btn">
+      <a onclick="goAdmin()">Acesso Administrativo</a>
+    </div>
+
+    <div class="api-status">
+      <div class="dot checking" id="dot-status"></div>
+      <span id="status-text">A verificar servidor...</span>
+    </div>
+
+  </div>
+
+  <!-- VIEW: PORTÃO ABERTO -->
+  <div class="view" id="view-gate">
+
+    <div class="gate-status" style="display:block;">
+
+      <div class="gate-animation">
+        <div class="gate-frame"></div>
+        <div class="gate-door" id="door-left"></div>
+        <div class="gate-door right" id="door-right"></div>
+      </div>
+
+      <div id="user-welcome-badge" class="user-badge" style="display:none;">
+        <div class="avatar" id="gate-avatar">U</div>
+        <div class="info">
+          <div class="name" id="gate-name">Utilizador</div>
+          <div class="bilhete" id="gate-bilhete-label">Bilhete: —</div>
+        </div>
+      </div>
+
+      <h2 id="gate-title">✅ Acesso Concedido</h2>
+      <p id="gate-msg">Portão a abrir, pode entrar</p>
+
+      <div class="countdown" id="countdown">5</div>
+      <div class="countdown-label">segundos até fechar</div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress" style="width:100%"></div>
+      </div>
+
+      <button class="btn btn-secondary" onclick="goLogin()">← Sair</button>
+
+    </div>
+
+  </div>
+
+  <!-- VIEW: ADMIN LOGIN -->
+  <div class="view" id="view-admin-login">
+
+    <div class="section-title">🔑 Painel Administrativo</div>
+
+    <div id="alert-admin" class="alert"></div>
+
+    <div class="form-group">
+      <label>Usuário Admin</label>
+      <input type="text" id="input-admin-username" placeholder="admin">
+    </div>
+
+    <div class="form-group">
+      <label>Senha Admin</label>
+      <input type="password" id="input-admin-pw" placeholder="Senha de administrador">
+    </div>
+
+    <button class="btn btn-primary" onclick="doAdminLogin()">Entrar como Admin</button>
+    <button class="btn btn-secondary" onclick="goLogin()">← Voltar</button>
+
+  </div>
+
+  <!-- VIEW: PAINEL ADMIN -->
+  <div class="view" id="view-admin">
+
+    <div class="section-title">⚙️ Painel de Administração</div>
+
+    <div id="alert-panel" class="alert"></div>
+
+    <!-- Informações do admin logado -->
+    <div class="admin-badge" id="admin-badge">
+      <div class="avatar">👤</div>
+      <div class="info">
+        <div class="name" id="admin-name">Administrador</div>
+        <div class="username" id="admin-username">@admin</div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <div class="section-title">Registar Utilizador</div>
+
+    <div class="form-group">
+      <label>Nome Completo</label>
+      <input type="text" id="reg-nome" placeholder="João Silva">
+    </div>
+    <div class="form-group">
+      <label>Número do Bilhete</label>
+      <input type="text" id="reg-bilhete" placeholder="ANG-2024-001" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="reg-senha" placeholder="Mínimo 4 caracteres">
+    </div>
+
+    <button class="btn btn-primary" onclick="doRegistar()">➕ Registar</button>
+
+    <div class="sep"></div>
+    <div class="section-title">Utilizadores Registados</div>
+    <div id="user-list"></div>
+
+    <div class="sep"></div>
+    <div class="section-title">Histórico de Acessos</div>
+    <div id="history-list" class="history-list"></div>
+
+    <div class="sep"></div>
+    <div class="section-title">📋 Logs de Administração</div>
+    <div id="admin-logs-list" class="history-list"></div>
+
+    <button class="btn btn-secondary" style="margin-top:1.2rem;" onclick="goLogin()">← Sair do Painel</button>
+
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// CONFIGURAÇÃO DA API
+// ============================================
+const API_URL = 'http://localhost:8080/api';
+
+// ============================================
+// VARIÁVEIS GLOBAIS
+// ============================================
+let currentAdmin = null;
+
+// ============================================
+// FUNÇÕES DE LOADING
+// ============================================
+function showLoading(text = 'A carregar...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+// ============================================
+// NAVEGAÇÃO
+// ============================================
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goLogin() {
+  showView('view-login');
+  document.getElementById('input-bilhete').value = '';
+  document.getElementById('input-senha').value = '';
+  document.getElementById('input-admin-username').value = '';
+  document.getElementById('input-admin-pw').value = '';
+  hideAlert('alert-login');
+  hideAlert('alert-admin');
+  currentAdmin = null;
+}
+
+function goAdmin() {
+  showView('view-admin-login');
+  document.getElementById('input-admin-username').value = '';
+  document.getElementById('input-admin-pw').value = '';
+  hideAlert('alert-admin');
+}
+
+// ============================================
+// ALERTAS
+// ============================================
+function showAlert(id, msg, type = 'danger') {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert ${type}`;
+  el.style.display = 'block';
+}
+
+function hideAlert(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ============================================
+// FUNÇÕES DE API - CHAMADAS AO SERVIDOR
+// ============================================
+
+// USERS
+async function apiGetUsers() {
+  const response = await fetch(`${API_URL}/users`);
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
+
+async function apiAddUser(nome, bilhete, senha, adminId) {
+  const response = await fetch(`${API_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, bilhete, senha, adminId })
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
+
+async function apiDeleteUser(bilhete, adminId) {
+  const response = await fetch(`${API_URL}/users/${bilhete}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminId })
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+}
+
+async function apiToggleUser(bilhete, ativo, adminId) {
+  const response = await fetch(`${API_URL}/users/${bilhete}/toggle`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ativo, adminId })
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+}
+
+// ADMIN
+async function apiAdminLogin(username, senha) {
+  const response = await fetch(`${API_URL}/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, senha })
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
+
+async function apiGetAdminLogs() {
+  const response = await fetch(`${API_URL}/admin/logs`);
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
+
+// HISTORY
+async function apiGetHistory() {
+  const response = await fetch(`${API_URL}/history`);
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
+
+async function apiAddHistory(bilhete, nome, ok) {
+  const response = await fetch(`${API_URL}/history`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bilhete, nome, ok })
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+}
+
+// GATE
+async function apiSendGateCommand(command) {
+  const response = await fetch(`${API_URL}/gate/${command}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(result.error);
+}
+
+// ============================================
+// VERIFICAR STATUS DO SERVIDOR
+// ============================================
+async function checkServerStatus() {
+  const dot = document.getElementById('dot-status');
+  const txt = document.getElementById('status-text');
+  dot.className = 'dot checking';
+  txt.textContent = 'A verificar servidor...';
+
+  try {
+    const response = await fetch(`${API_URL}/status`);
+    const data = await response.json();
+    
+    if (data.ok) {
+      dot.className = 'dot online';
+      txt.textContent = data.arduino ? '✅ Servidor + Arduino online' : '⚠️ Servidor online, Arduino offline';
+    } else {
+      throw new Error('Servidor offline');
+    }
+  } catch {
+    dot.className = 'dot offline';
+    txt.textContent = '❌ Servidor offline';
+  }
+}
+
+// ============================================
+// LOGIN UTILIZADOR
+// ============================================
+async function doLogin() {
+  const bilhete = document.getElementById('input-bilhete').value.trim().toUpperCase();
+  const senha = document.getElementById('input-senha').value;
+  hideAlert('alert-login');
+
+  if (!bilhete || !senha) {
+    showAlert('alert-login', 'Preencha o bilhete e a senha.');
+    return;
+  }
+
+  const btn = document.querySelector('#view-login .btn-primary');
+  const spinner = document.getElementById('spinner-login');
+  const btnText = document.getElementById('btn-text');
+  const btnIcon = document.getElementById('btn-icon');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnIcon.style.display = 'none';
+  btnText.textContent = 'A verificar...';
+
+  try {
+    showLoading('A verificar credenciais...');
+    
+    const users = await apiGetUsers();
+    const user = users.find(u => 
+      u.bilhete.toUpperCase() === bilhete && 
+      u.senha === senha &&
+      u.ativo === true
+    );
+
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnIcon.style.display = 'inline';
+    btnText.textContent = 'Abrir Portão';
+
+    if (!user) {
+      hideLoading();
+      showAlert('alert-login', '❌ Bilhete ou senha incorretos, ou usuário desativado.');
+      await apiAddHistory(bilhete, 'Desconhecido', false);
+      try {
+        await apiSendGateCommand('DENY');
+      } catch {}
+      return;
+    }
+
+    await apiAddHistory(user.bilhete, user.nome, true);
+    try {
+      await apiSendGateCommand('OPEN');
+    } catch (err) {
+      console.warn('Erro ao enviar comando para Arduino:', err);
+    }
+    hideLoading();
+    openGate(user);
+
+  } catch (err) {
+    console.error('Erro no login:', err);
+    hideLoading();
+    showAlert('alert-login', '❌ Erro ao conectar ao servidor.');
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnIcon.style.display = 'inline';
+    btnText.textContent = 'Abrir Portão';
+  }
+}
+
+// ============================================
+// ABRIR PORTÃO (UI)
+// ============================================
+function openGate(user) {
+  showView('view-gate');
+
+  const initials = user.nome.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('gate-avatar').textContent = initials;
+  document.getElementById('gate-name').textContent = user.nome;
+  document.getElementById('gate-bilhete-label').textContent = 'Bilhete: ' + user.bilhete;
+  document.getElementById('user-welcome-badge').style.display = 'flex';
+
+  setTimeout(() => {
+    document.getElementById('door-left').classList.add('open');
+    document.getElementById('door-right').classList.add('open');
+  }, 300);
+
+  let t = 5;
+  document.getElementById('countdown').textContent = t;
+  document.getElementById('progress').style.width = '100%';
+
+  const timer = setInterval(() => {
+    t--;
+    document.getElementById('countdown').textContent = t;
+    document.getElementById('progress').style.width = (t / 5 * 100) + '%';
+
+    if (t <= 0) {
+      clearInterval(timer);
+      document.getElementById('door-left').classList.remove('open');
+      document.getElementById('door-right').classList.remove('open');
+      document.getElementById('gate-title').textContent = '🔒 Portão Fechado';
+      document.getElementById('gate-msg').textContent = 'Portão fechado automaticamente';
+      
+      try {
+        apiSendGateCommand('CLOSE');
+      } catch {}
+
+      setTimeout(goLogin, 2000);
+    }
+  }, 1000);
+}
+
+// ============================================
+// LOGIN ADMIN
+// ============================================
+async function doAdminLogin() {
+  const username = document.getElementById('input-admin-username').value.trim();
+  const senha = document.getElementById('input-admin-pw').value;
+  hideAlert('alert-admin');
+
+  if (!username || !senha) {
+    showAlert('alert-admin', 'Preencha usuário e senha.');
+    return;
+  }
+
+  showLoading('A verificar credenciais...');
+
+  try {
+    const admin = await apiAdminLogin(username, senha);
+    currentAdmin = admin;
+    
+    hideLoading();
+    showView('view-admin');
+    
+    document.getElementById('admin-name').textContent = admin.nome;
+    document.getElementById('admin-username').textContent = '@' + admin.username;
+    
+    await Promise.all([
+      renderUserList(),
+      renderHistory(),
+      renderAdminLogs()
+    ]);
+    
+  } catch (err) {
+    console.error('Erro no login admin:', err);
+    hideLoading();
+    showAlert('alert-admin', '❌ Usuário ou senha incorretos.');
+  }
+}
+
+// ============================================
+// REGISTAR USUÁRIO (ADMIN)
+// ============================================
+async function doRegistar() {
+  const nome = document.getElementById('reg-nome').value.trim();
+  const bilhete = document.getElementById('reg-bilhete').value.trim().toUpperCase();
+  const senha = document.getElementById('reg-senha').value;
+  hideAlert('alert-panel');
+
+  if (!nome || !bilhete || !senha) {
+    showAlert('alert-panel', 'Preencha todos os campos.', 'danger');
+    return;
+  }
+  if (senha.length < 4) {
+    showAlert('alert-panel', 'Senha deve ter pelo menos 4 caracteres.', 'warn');
+    return;
+  }
+
+  showLoading('A registrar utilizador...');
+
+  try {
+    await apiAddUser(nome, bilhete, senha, currentAdmin?.id);
+
+    hideLoading();
+    showAlert('alert-panel', `✅ ${nome} registado com sucesso!`, 'success');
+    document.getElementById('reg-nome').value = '';
+    document.getElementById('reg-bilhete').value = '';
+    document.getElementById('reg-senha').value = '';
+    
+    await Promise.all([
+      renderUserList(),
+      renderAdminLogs()
+    ]);
+
+  } catch (err) {
+    console.error('Erro ao registrar:', err);
+    hideLoading();
+    showAlert('alert-panel', err.message || 'Erro ao registrar utilizador.', 'danger');
+  }
+}
+
+// ============================================
+// DELETAR USUÁRIO (ADMIN)
+// ============================================
+async function deleteUser(bilhete) {
+  if (!confirm(`Remover utilizador com bilhete ${bilhete}?`)) return;
+  
+  showLoading('A remover utilizador...');
+  
+  try {
+    await apiDeleteUser(bilhete, currentAdmin?.id);
+    hideLoading();
+    await Promise.all([
+      renderUserList(),
+      renderAdminLogs()
+    ]);
+  } catch (err) {
+    console.error('Erro ao remover:', err);
+    hideLoading();
+    showAlert('alert-panel', 'Erro ao remover utilizador.', 'danger');
+  }
+}
+
+// ============================================
+// ALTERAR STATUS (ADMIN)
+// ============================================
+async function toggleStatus(bilhete, ativo) {
+  const statusText = ativo ? 'Ativar' : 'Desativar';
+  if (!confirm(`Tem certeza que deseja ${statusText} este usuário?`)) return;
+  
+  showLoading(`A ${statusText.toLowerCase()}...`);
+  
+  try {
+    await apiToggleUser(bilhete, ativo, currentAdmin?.id);
+    hideLoading();
+    await Promise.all([
+      renderUserList(),
+      renderAdminLogs()
+    ]);
+  } catch (err) {
+    console.error('Erro ao alterar status:', err);
+    hideLoading();
+    showAlert('alert-panel', 'Erro ao alterar status do usuário.', 'danger');
+  }
+}
+
+// ============================================
+// RENDERIZAR LISTAS
+// ============================================
+
+async function renderUserList() {
+  try {
+    const users = await apiGetUsers();
+    const el = document.getElementById('user-list');
+    if (!users || users.length === 0) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Nenhum utilizador registado.</p>';
+      return;
+    }
+    
+    el.innerHTML = users.map(u => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <div style="flex:1;">
+          <strong>${u.nome}</strong>
+          <span style="color:var(--text3);margin-left:6px;">${u.bilhete}</span>
+          <span style="display:inline-block;margin-left:8px;font-size:10px;padding:2px 6px;border-radius:4px;background:${u.ativo ? 'var(--success-bg)' : 'var(--danger-bg)'};color:${u.ativo ? 'var(--success)' : 'var(--danger)'};">
+            ${u.ativo ? '✅ Ativo' : '⛔ Inativo'}
+          </span>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button onclick="toggleStatus('${u.bilhete}', ${!u.ativo})"
+            style="background:${u.ativo ? 'var(--warn-bg)' : 'var(--success-bg)'};color:${u.ativo ? 'var(--warn)' : 'var(--success)'};border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;">
+                        ${u.ativo ? 'Desativar' : 'Ativar'}
+          </button>
+          <button onclick="deleteUser('${u.bilhete}')"
+            style="background:var(--danger-bg);color:var(--danger);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;">
+            Remover
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Erro ao renderizar usuários:', err);
+    document.getElementById('user-list').innerHTML = '<p style="font-size:13px;color:var(--danger)">Erro ao carregar usuários.</p>';
+  }
+}
+
+async function renderHistory() {
+  try {
+    const history = await apiGetHistory();
+    const el = document.getElementById('history-list');
+    if (!history || history.length === 0) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Nenhum acesso registado ainda.</p>';
+      return;
+    }
+    
+    el.innerHTML = history.slice(0, 10).map(item => {
+      const d = new Date(item.ts);
+      const time = d.toLocaleTimeString('pt-AO', {hour:'2-digit',minute:'2-digit'});
+      const date = d.toLocaleDateString('pt-AO', {day:'2-digit',month:'2-digit'});
+      return `
+        <div class="history-item">
+          <span class="htime">${date} ${time}</span>
+          <span style="flex:1;">${item.nome} <span style="color:var(--text3)">(${item.bilhete})</span></span>
+          <span class="hstatus ${item.ok ? 'ok' : 'fail'}">${item.ok ? '✅ OK' : '❌ Negado'}</span>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Erro ao renderizar histórico:', err);
+    document.getElementById('history-list').innerHTML = '<p style="font-size:13px;color:var(--danger)">Erro ao carregar histórico.</p>';
+  }
+}
+
+async function renderAdminLogs() {
+  try {
+    const logs = await apiGetAdminLogs();
+    const el = document.getElementById('admin-logs-list');
+    if (!logs || logs.length === 0) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Nenhuma atividade registada.</p>';
+      return;
+    }
+    
+    el.innerHTML = logs.map(log => {
+      const d = new Date(log.ts);
+      const time = d.toLocaleTimeString('pt-AO', {hour:'2-digit',minute:'2-digit'});
+      const date = d.toLocaleDateString('pt-AO', {day:'2-digit',month:'2-digit'});
+      return `
+        <div class="history-item">
+          <span class="htime">${date} ${time}</span>
+          <span style="flex:1;color:var(--text2);font-size:12px;">
+            <strong>${log.admins?.nome || 'Sistema'}</strong> 
+            ${log.acao}
+            ${log.detalhes ? `— ${log.detalhes}` : ''}
+          </span>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Erro ao renderizar logs:', err);
+    document.getElementById('admin-logs-list').innerHTML = '<p style="font-size:13px;color:var(--danger)">Erro ao carregar logs.</p>';
+  }
+}
+
+// ============================================
+// ENTER KEY SUPPORT
+// ============================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const activeView = document.querySelector('.view.active');
+    if (activeView) {
+      const id = activeView.id;
+      if (id === 'view-login') doLogin();
+      if (id === 'view-admin-login') doAdminLogin();
+    }
+  }
+});
+
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+// Verificar status do servidor a cada 30 segundos
+checkServerStatus();
+setInterval(checkServerStatus, 30000);
+
+console.log('🚪 PortãoSmart - Sistema de Controlo de Acesso');
+console.log('📡 API:', API_URL);
+console.log('👤 Admin padrão: admin / admin123');
+console.log('👤 Usuário padrão: ANG-2024-001 / 1234');
+</script>
+</body>
+</html>
