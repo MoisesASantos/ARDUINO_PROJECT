@@ -586,7 +586,7 @@
 // ============================================
 // CONFIGURAÇÃO DA API
 // ============================================
-const API_URL = 'http://localhost:8080/api';
+const API_URL = '/api';
 
 // ============================================
 // VARIÁVEIS GLOBAIS
@@ -727,7 +727,7 @@ async function apiAddHistory(bilhete, nome, ok) {
 
 // GATE
 async function apiSendGateCommand(command) {
-  const response = await fetch(`${API_URL}/gate/${command}`, {
+  const response = await fetch(`${ARDUINO_API}/api/gate/${cmd}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   });

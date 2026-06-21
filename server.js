@@ -17,7 +17,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // ============================================
 // VALIDAÇÃO DAS VARIÁVEIS DE AMBIENTE
@@ -292,7 +292,7 @@ function sendToArduino(command) {
 // ============================================
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================
 // ROTAS DA API - ARDUINO
@@ -504,7 +504,7 @@ app.get('/api/supabase/status', async (req, res) => {
 // ============================================
 // INICIAR SERVIDOR
 // ============================================
-app.listen(PORT, async () => {
+app.listen(PORT, "0.0.0.0", async () => {
   console.log('');
   console.log('╔══════════════════════════════════════════════════╗');
   console.log('║        SERVIDOR PORTÃO AUTOMÁTICO v2.0          ║');
